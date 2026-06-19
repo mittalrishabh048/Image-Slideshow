@@ -8,7 +8,7 @@ from PIL import Image,ImageTk
 ## Main Window 
 root=tk.Tk()
 root.title("Image Slideshow")
-root.geometry("600x630") # Adjusted window height slightly
+root.geometry("600x700") # Adjusted window 
 
 ## State Management Tracker
 is_playing = False  # Tracks if the slideshow loop is active
@@ -81,8 +81,11 @@ def auto_slideshow_loop():
     current_index = (current_index + 1) % len(images)
     update_display()
     
-    # Schedule the next slide and save the timer ID
-    slideshow_timer = root.after(2000, auto_slideshow_loop)
+    # Read the slider value (seconds) and convert to milliseconds
+    delay_ms = speed_slider.get() * 1000
+
+    # Schedule the next slide based on the customized speed
+    slideshow_timer = root.after(delay_ms, auto_slideshow_loop)
 
 ## Control Actions
 def toggle_play():
@@ -154,5 +157,22 @@ next_button = tk.Button(
 )
 next_button.pack(side=tk.LEFT, padx=10)
 
+## UI Speed Slider Layout Container
+speed_frame = tk.Frame(root)
+speed_frame.pack(pady=15)
+
+speed_label = tk.Label(speed_frame, text="Interval Speed (seconds):", font=("Arial", 10))
+speed_label.pack(side=tk.LEFT, padx=5)
+
+speed_slider = tk.Scale(
+    speed_frame, 
+    from_=1, 
+    to=5, 
+    orient=tk.HORIZONTAL, 
+    length=150,
+    tickinterval=1
+)
+speed_slider.set(2)  # Default value initialized to 2 seconds
+speed_slider.pack(side=tk.LEFT, padx=5)
 
 root.mainloop()
