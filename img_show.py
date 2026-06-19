@@ -10,6 +10,10 @@ root=tk.Tk()
 root.title("Image Slideshow")
 root.geometry("500x500")
 
+## State Management
+is_playing = False  # Tracks if the slideshow loop is active
+
+
 ## List Of Image Paths
 image_paths=[
     r"C:\Users\mitta\Downloads\sololeveling.png",
@@ -19,44 +23,61 @@ image_paths=[
 ]
 image_size=(500,500)
 images=[]
+## Defensive Image Loading Loop
 for each in image_paths:
-    img=Image.open(each)
-    img=img.resize(image_size)
-    images.append(img)
-
-## Convert PIL Images Into tkinter Compatible Images
-final_images=[]
-for each_img in images:
-    photo=ImageTk.PhotoImage(each_img)
-    final_images.append(photo)
-#print(f"Total images successfully loaded: {len(final_images)}")
-
+    try:
+        img = Image.open(each)
+        img = img.resize(image_size)
+        photo = ImageTk.PhotoImage(img)
+        images.append(photo)
+    except FileNotFoundError:
+        print(f"Warning: Could not find image at {each}. Skipping.")
+    except Exception as e:
+        print(f"Error loading {each}: {e}. Skipping.")
+# Print summary log to terminal
+print(f"Total images successfully loaded: {len(images)}")
 
 ## Label Widget To Keep Photo
 image_label=tk.Label(root)
 image_label.pack(pady=20)
 
+# If no images loaded at all, show a default message
+if not images:
+    image_label.config(text="No images found!\nPlease check your file paths.", font=("Arial", 14))
 
 ## Slideshow Function
 def start_slideshow(index=0):
+    global is_playing
+
+    # Defensive check: if no images exist, exit function
+    if not images:
+        return
+    
     # If we reach the end of the list, reset back to the first image
-    if index >= len(final_images):
+    if index >= len(images):
         index = 0
         
     # Update the label with the current image
-    dbgimage_label.config(image=final_images[index])
+    image_label.config(image=images[index])
     #image_label.image = final_images[index]
     
     # Correctly schedule the next image index update using lambda
-    root.current_image = final_images[index]
+    root.current_image = images[index]
     root.after(2000, lambda: start_slideshow(index + 1))
 
+## Controller Function
+def play_trigger():
+    global is_playing
+    # Only start the loop if it's not already running
+    if not is_playing:
+        is_playing = True
+        start_slideshow(0)
 
 ## Button
 play_button=tk.Button(
     root,
     text="Play Slideshow",
-    command=start_slideshow
+    command=play_trigger
 )
 
 play_button.pack(pady=40)
