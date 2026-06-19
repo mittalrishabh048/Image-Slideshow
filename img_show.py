@@ -8,7 +8,7 @@ from PIL import Image,ImageTk
 ## Main Window 
 root=tk.Tk()
 root.title("Image Slideshow")
-root.geometry("600x600")# Expanded slightly to give buttons breathing room
+root.geometry("600x630") # Adjusted window height slightly
 
 ## State Management Tracker
 is_playing = False  # Tracks if the slideshow loop is active
@@ -40,7 +40,21 @@ print(f"Total images successfully loaded: {len(images)}")
 
 ## Label Widget To Keep Photo
 image_label=tk.Label(root)
-image_label.pack(pady=10)
+image_label.pack(pady=20)
+
+## Top-Right Corner Image Counter Overlay
+# This label uses image_label as its parent so it sits directly on top of the graphics window
+counter_label = tk.Label(
+    image_label, 
+    text="", 
+    font=("Arial", 11, "bold"), 
+    fg="white", 
+    bg="#222222",  # Dark charcoal background box
+    padx=8, 
+    pady=4
+)
+# Position dynamically in the top-right corner (North-East) of the image frame
+counter_label.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
 
 # If no images loaded at all, show a default message
 if not images:
@@ -54,6 +68,9 @@ def update_display():
         return
     image_label.config(image=images[current_index])
     root.current_image = images[current_index]
+
+    # Update counter overlay text
+    counter_label.config(text=f"Image {current_index + 1} of {len(images)}")
 
 ## Slideshow Engine
 def auto_slideshow_loop():
