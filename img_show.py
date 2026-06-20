@@ -3,7 +3,7 @@
 import tkinter as tk
 import time
 from PIL import Image,ImageTk
-
+import os # NEW: Imported for directory scanning and file path manipulation
 
 ## Main Window 
 root=tk.Tk()
@@ -15,26 +15,43 @@ is_playing = False  # Tracks if the slideshow loop is active
 current_index = 0       # Tracks which image is currently displayed
 slideshow_timer = None  # Holds the reference ID for the root.after() loop
 
-## List Of Image Paths
-image_paths=[
-    r"C:\Users\mitta\Downloads\sololeveling.png",
-    r"C:\Users\mitta\Downloads\demonslayer.png",
-    r"C:\Users\mitta\Downloads\bleach.png",
-    r"C:\Users\mitta\Downloads\naruto.png"
-]
+## --- DYNAMIC FOLDER CONFIGURATION ---
+
+# OPTION A: Local Assets Folder (Portable - works on any computer)
+TARGET_FOLDER = "./Images"
+
+# OPTION B: Global Downloads Folder (Commented out - swap if desired)
+## TARGET_FOLDER = r"C:\Users\mitta\Downloads" => If we want to use this method we comment other method and apply this in code.
+
+# Whitelist filter to ensure we only try to open safe image files
+VALID_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
+
+
+image_size = (500, 500)
+images = []
+
 image_size=(500,500)
 images=[]
-## Defensive Image Loading Loop
-for each in image_paths:
-    try:
-        img = Image.open(each)
-        img = img.resize(image_size)
-        photo = ImageTk.PhotoImage(img)
-        images.append(photo)
-    except FileNotFoundError:
-        print(f"Warning: Could not find image at {each}. Skipping.")
-    except Exception as e:
-        print(f"Error loading {each}: {e}. Skipping.")
+
+## Dynamic Folder Scanner & Defensive Image Loading Loop
+if os.path.exists(TARGET_FOLDER):
+    # Scan all file names sitting inside the chosen folder directory
+    for file_name in os.listdir(TARGET_FOLDER):
+        # Filter check: does this specific file end with a valid image extension?
+        if file_name.lower().endswith(VALID_EXTENSIONS):
+            try:
+                # Safely glue the folder path and file name together into a full path string
+                full_path = os.path.join(TARGET_FOLDER, file_name)
+                
+                img = Image.open(full_path)
+                img = img.resize(image_size)
+                photo = ImageTk.PhotoImage(img)
+                images.append(photo)
+            except Exception as e:
+                print(f"Error loading {file_name}: {e}. Skipping.")
+else:
+    print(f"Error: The directory '{TARGET_FOLDER}' does not exist.")
+
 # Print summary log to terminal
 print(f"Total images successfully loaded: {len(images)}")
 
@@ -56,10 +73,14 @@ counter_label = tk.Label(
 # Position dynamically in the top-right corner (North-East) of the image frame
 counter_label.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
 
-# If no images loaded at all, show a default message
-if not images:
-    image_label.config(text="No images found!\nPlease check your file paths.", font=("Arial", 14))
-
+# If images loaded successfully, set the initial frame view
+if images:
+    image_label.config(image=images[current_index])
+    root.current_image = images[current_index]
+    counter_label.config(text=f"Image {current_index + 1} of {len(images)}")
+else:
+    image_label.config(text="No images found!\nPlease check your folder configuration.", font=("Arial", 14))
+    counter_label.place_forget()
 
 ## Core Display Update Function
 def update_display():
